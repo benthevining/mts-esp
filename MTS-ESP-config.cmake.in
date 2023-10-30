@@ -1,0 +1,76 @@
+cmake_minimum_required (VERSION 3.25 FATAL_ERROR)
+
+@PACKAGE_INIT@
+
+include (FeatureSummary)
+
+set_package_properties ("${CMAKE_FIND_PACKAGE_NAME}" PROPERTIES
+						URL "https://oddsound.com/usingmtsesp.php" 
+						DESCRIPTION "A simple but versatile C/C++ library for adding microtuning support to audio and MIDI plugins.")
+
+set (${CMAKE_FIND_PACKAGE_NAME}_FOUND ON)
+
+set (valid_components Client Master)
+
+set (resolved_list "")
+
+foreach(comp_name IN LISTS ${CMAKE_FIND_PACKAGE_NAME}_FIND_COMPONENTS)
+	if("${comp_name}" IN_LIST valid_components)
+		list (APPEND resolved_list "${comp_name}")
+	else()
+		list (APPEND ${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE "Invalid component '${comp_name}' requested")
+		set (${CMAKE_FIND_PACKAGE_NAME}_${comp_name}_FOUND OFF)
+
+		if(${CMAKE_FIND_PACKAGE_NAME}_FIND_REQUIRED_${comp_name})
+			set (${CMAKE_FIND_PACKAGE_NAME}_FOUND OFF)
+		endif()
+	endif()
+endforeach()
+
+set (${CMAKE_FIND_PACKAGE_NAME}_FIND_COMPONENTS ${resolved_list})
+
+# client
+if ("Client" IN_LIST ${CMAKE_FIND_PACKAGE_NAME}_FIND_COMPONENTS)
+
+	include ("${CMAKE_CURRENT_LIST_DIR}/mts_esp_client_targets.cmake"
+			 RESULT_VARIABLE client_include_result)
+
+	if("${client_include_result}" MATCHES "NOTFOUND")
+		set (${CMAKE_FIND_PACKAGE_NAME}_Client_FOUND OFF)
+		list (APPEND ${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE 
+				"Targets cmake file for component Client could not be included. The installation may not have included the Client component.")
+
+		if(${CMAKE_FIND_PACKAGE_NAME}_FIND_REQUIRED_Client)
+			set (${CMAKE_FIND_PACKAGE_NAME}_FOUND OFF)
+		endif()
+	else()
+		set (${CMAKE_FIND_PACKAGE_NAME}_Client_FOUND ON)
+	endif()
+endif()
+
+# master
+if ("Master" IN_LIST ${CMAKE_FIND_PACKAGE_NAME}_FIND_COMPONENTS)
+
+	include ("${CMAKE_CURRENT_LIST_DIR}/mts_esp_master_targets.cmake"
+			 RESULT_VARIABLE master_include_result)
+
+	if("${master_include_result}" MATCHES "NOTFOUND")
+		set (${CMAKE_FIND_PACKAGE_NAME}_Master_FOUND OFF)
+		list (APPEND ${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE
+			  "Targets cmake file for component Master could not be included. The installation may not have included the Master component.")
+
+		if(${CMAKE_FIND_PACKAGE_NAME}_FIND_REQUIRED_Master)
+			set (${CMAKE_FIND_PACKAGE_NAME}_FOUND OFF)
+		endif()
+	else()
+		set (${CMAKE_FIND_PACKAGE_NAME}_Master_FOUND ON)
+	endif()
+endif()
+
+include (FindPackageMessage)
+
+find_package_message ("MTS-ESP" 
+					  "MTS-ESP found"
+					  "MTS-ESP [${${CMAKE_FIND_PACKAGE_NAME}_FIND_COMPONENTS}]")
+
+check_required_components ("${CMAKE_FIND_PACKAGE_NAME}")
